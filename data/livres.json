@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "titre": "Les Misérables",
+    "auteur": "Victor Hugo",
+    "categorie": "Roman",
+    "image": "https://covers.openlibrary.org/b/id/8231996-L.jpg",
+    "disponible": true
+  },
+  {
+    "id": 2,
+    "titre": "L'Étranger",
+    "auteur": "Albert Camus",
+    "categorie": "Philosophie",
+    "image": "https://covers.openlibrary.org/b/id/11153254-L.jpg",
+    "disponible": true
+  }
+]

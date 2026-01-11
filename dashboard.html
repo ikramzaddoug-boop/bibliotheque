@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard | Bibliothèque</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Google Charts loader (required for dashboard charts) -->
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<script>if(localStorage.getItem("isLoggedIn")!=="true"){location.href="login.html";}</script>
+
+<div class="container-fluid">
+  <div class="row min-vh-100">
+    <aside class="col-12 col-md-3 col-lg-2 bg-dark text-white p-3" role="navigation">
+      <div class="text-center mb-4"><h4>📚 Bibliothèque</h4></div>
+      <nav><ul class="nav flex-column gap-1">
+        <li class="nav-item"><a href="dashboard.html" class="nav-link text-white active"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a></li>
+        <li class="nav-item"><a href="pages/livres.html" class="nav-link text-white"><i class="bi bi-book me-1"></i> Livres</a></li>
+        <li class="nav-item"><a href="pages/auteurs.html" class="nav-link text-white"><i class="bi bi-person-lines-fill me-1"></i> Auteurs</a></li>
+        <li class="nav-item"><a href="pages/categories.html" class="nav-link text-white"><i class="bi bi-tags me-1"></i> Catégories</a></li>
+        <li class="nav-item"><a href="pages/adherents.html" class="nav-link text-white"><i class="bi bi-people me-1"></i> Adhérents</a></li>
+        <li class="nav-item"><a href="pages/emprunts.html" class="nav-link text-white"><i class="bi bi-arrow-left-right me-1"></i> Emprunts</a></li>
+      </ul></nav>
+      <footer class="mt-4"><button id="logoutBtn" class="btn btn-danger w-100"><i class="bi bi-box-arrow-right me-1"></i> Déconnexion</button></footer>
+    </aside>
+
+    <main class="col-12 col-md-9 col-lg-10 p-4">
+      <div class="topbar mb-3">
+        <form class="search" onsubmit="event.preventDefault();">
+          <input class="form-control" id="globalSearch" type="search" placeholder="Rechercher (livres, adhérents, auteurs...)" aria-label="Rechercher">
+        </form>
+        <div class="user-badge">
+          <div class="avatar">A</div>
+        </div>
+      </div>
+
+      <header class="mb-4 d-flex justify-content-between align-items-start">
+        <div>
+          <h2>Dashboard</h2>
+          <p class="text-muted">Vue globale et statistiques de la bibliothèque</p>
+        </div>
+        <small id="lastUpdated" class="text-muted">Dernière mise à jour: —</small>
+      </header>
+
+      <section class="mb-5">
+        <div class="row g-4">
+          <article class="col-6 col-md-3"><div class="card shadow stat-card text-center"><div class="card-body"><small class="text-muted d-block mb-2">Livres</small><h2 id="totalBooks">0</h2><small class="text-muted">Total catalogué</small></div></div></article>
+          <article class="col-6 col-md-3"><div class="card shadow stat-card text-center"><div class="card-body"><small class="text-muted d-block mb-2">Adhérents</small><h2 id="totalClients">0</h2><small class="text-muted">Membres inscrits</small></div></div></article>
+          <article class="col-6 col-md-3"><div class="card shadow stat-card text-center"><div class="card-body"><small class="text-muted d-block mb-2">Auteurs</small><h2 id="totalAuthors">0</h2><small class="text-muted">Auteurs enregistrés</small></div></div></article>
+          <article class="col-6 col-md-3"><div class="card shadow stat-card text-center"><div class="card-body"><small class="text-muted d-block mb-2">Emprunts</small><h2 id="totalLoans">0</h2><small class="text-muted">Actifs & totaux</small></div></div></article>
+        </div>
+      </section>
+
+      <section>
+        <div class="row g-4">
+          <article class="col-md-7"><div class="card shadow"><div class="card-body"><h5 class="mb-3">Livres par catégorie</h5><div id="categoryChart" style="height:320px"></div></div></div></article>
+          <article class="col-md-5">
+            <div class="card shadow mb-3"><div class="card-body"><h5 class="mb-3">Livres empruntés / disponibles</h5><div id="statusChart" style="height:220px"></div></div></div>
+            <div class="card shadow"><div class="card-body"><h5 class="mb-3">Derniers emprunts</h5><div class="table-responsive"><table class="table table-sm" id="recentLoansTable"><thead class="table-light"><tr><th>Livre</th><th>Adhérent</th><th>Date emprunt</th><th>Date retour</th></tr></thead><tbody id="recentLoansBody"><tr><td colspan="4" class="text-muted">Chargement...</td></tr></tbody></table></div></div></div>
+          </article>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="js/storage.js"></script>
+<script>
+  // seed data then load dashboard and auth
+  Promise.all([
+    loadInitialData("livres","data/livres.json"),
+    loadInitialData("auteurs","data/auteurs.json"),
+    loadInitialData("categories","data/categories.json"),
+    loadInitialData("adherents","data/adherents.json"),
+    loadInitialData("emprunts","data/emprunts.json")
+  ]).then(() => {
+    const dash = document.createElement("script"); dash.src = "js/dashboard.js"; document.body.appendChild(dash);
+    const auth = document.createElement("script"); auth.src = "js/auth.js"; document.body.appendChild(auth);
+    const last = document.getElementById("lastUpdated"); if(last) last.textContent = "Dernière mise à jour: " + new Date().toLocaleString();
+  });
+</script>
+
+<script>
+  // global search handler (context-aware)
+  document.getElementById('globalSearch')?.addEventListener('input', (e) => {
+    const q = (e.target.value||'').trim().toLowerCase();
+    // recent loans table filter
+    const tbody = document.querySelector('#recentLoansBody');
+    if (tbody) {
+      Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+        const text = tr.textContent.toLowerCase();
+        tr.style.display = q === '' || text.includes(q) ? '' : 'none';
+      });
+    }
+  });
+
+  // logout button
+  document.addEventListener('click', (ev) => {
+    const btn = ev.target.closest && ev.target.closest('#logoutBtn');
+    if (!btn) return;
+    if (typeof logout === 'function') logout();
+    else { localStorage.removeItem('isLoggedIn'); location.href='login.html'; }
+  });
+</script>
+</body>
+</html>
